@@ -1,0 +1,266 @@
+EOM with slip --
+function vdot_states = EOM_with_slip(t,v,R,Meq,mr,mew,b,i,Jeq,Tr,Tl,P1,P2,L,Iwy,N)
+%EOM_WITH_SLIP Summary of this function goes here
+%   Detailed explanation goes here
+V=v(1);
+omega=v(2);
+t1_dot=v(3);
+t2_dot=v(4);
+
+rho1_dot=(V+omega*L)/2;
+rho2_dot=(V-omega*L)/2;
+
+%% Longitudnal forces
+%Right wheel
+if(abs(rho1_dot)>abs(R*t1_dot)) %Case of braking
+    if(rho1_dot<10e-12)
+        flong_1=0;
+    else
+        s=((R*t1_dot-rho1_dot)/rho1_dot);
+        flong_1=friction(mew,s,N);
+    end
+    
+elseif(abs(rho1_dot)<abs((R*t1_dot))) % Case of accelerating
+    if((R*t1_dot)<10e-12)
+        flong_1=0;
+    else
+        s=((R*t1_dot-rho1_dot)/(R*t1_dot));
+        flong_1=friction(mew,s,N);
+    end
+else
+     flong_1=0;
+end
+
+%Left wheel
+if(abs(rho2_dot)>abs(R*t2_dot)) %Case of braking
+    if(rho2_dot<10e-12)
+        flong_2=0;
+    else
+        s=((R*t2_dot-rho2_dot)/rho2_dot);
+        flong_2=friction(mew,s,N);
+    end
+elseif(abs(rho2_dot)<abs((R*t2_dot))) % Case of accelerating
+    if((R*t2_dot)<10e-12)
+        flong_2=0;
+    else
+        s=((R*t2_dot-rho2_dot)/(R*t2_dot));
+        flong_2=friction(mew,s,N);
+    end
+else
+     flong_2=0;
+end
+%% wheel EOMs 
+t1_ddot=(Tr-flong_1*R)/Iwy;
+t2_ddot=(Tl-flong_2*R)/Iwy;
+%% Body EOM
+Vdot= [(Tr+Tl)/R-mr*b*omega^2-(Iwy/R)*(t1_ddot+t2_ddot) ]/(2*(P1+P2));
+omega_dot=( (Tr-Tl)/R- mr*b/L*V*omega -(Iwy/R)*(t1_ddot-t2_ddot) )/(2*L*(P1-P2));
+
+%% Output states
+vdot_states=[Vdot;omega_dot;t1_ddot;t2_ddot];
+end
+
+*********************************************************************************************************************************************************************************************
+
+
+Controller --
+
+
+function vdot_states = old_controller(t,v,Vr,omega_r,Kv,Kw,R,mr,b,Meq,Jeq,mew,P1,P2,Iwy,i,L,N)
+%OLD_CONTROLLER Summary of this function goes here
+%   Detailed explanation goes here
+V=v(1);
+omega=v(2);
+
+Ve=Vr-V;
+we=omega_r-omega;
+
+Td=R*[Kv*Ve*(2*(P1+P2))+mr*b*omega^2];
+Tt=R*[Kw*we*(2*L*(P1-P2))+mr*b/L*V*omega];
+
+
+Tr=(Td+Tt)/2;
+Tl=(Td-Tt)/2;
+
+
+vdot_states=EOM_with_slip(t,v,R,Meq,mr,mew,b,i,Jeq,Tr,Tl,P1,P2,L,Iwy,N);
+% vdot_states=EOM_without_slip(t,v,R,Meq,mr,b,Jeq,Tr,Tl);
+end
+
+*****************************************************************************************************************************************************************
+
+Friction --
+
+function f = friction(mew,s,N)
+%FRICTION_CONSTANT Summary of this function goes here
+%   Detailed explanation goes here
+
+if(s<0.15 || s>0.15)
+   f=s*mew/0.15*N;
+elseif(s>= 0.15 && s<1 )
+  f=-s*0.34*mew/0.85+mew;
+  f=f*N;
+elseif(s<-0.15&& s>-1)
+    f= s*0.34*mew/0.85-mew;
+    f=f*N;
+end
+
+end
+
+********************************************************************************************************************************************************
+
+Closed loop controller ---
+%% 
+clc
+clear all
+close all
+%% Defining variables
+syms rho1 rho2 t1 t2 eta1 tau1 tau2 omega V T_d T_t mr b vr omega_r R ...
+        t1_ddot t2_ddot t1_dot t2_dot L Vdot omega_dot Tr Tl Meq Jeq
+mc = 2; % Mass of the Robot platform
+mr=mc;
+mw=0.5; % Mass of the wheel and motor
+R = 0.0364; % Radius of the wheel
+b= 0.05; % Distance of the robot from the center of drive axle
+L = 0.164; % Distance between two wheels
+
+Im=0.0012;
+Iwy=0.025;
+Ic=0.732;
+I=Ic+mc*b^2+2*mw*L^2+2*Im;   %MI of robot wrt centre point A.
+
+m=mc+2*mw;
+Meq=m+(2*Iwy/R^2);
+Jeq=(I+2*Iwy*L^2/R^2);  
+P1=(Ic + 2*Iwy + L^2*mr + 4*b^2*mw + b^2*mr);
+P2=-(- mr*b^2 + mr*L^2 + Ic + 2*Iwy);
+
+N=m*9.81;
+mew=0.8;
+
+%% Ode45
+timespan=0:0.2:50;
+i=0
+Vr=1;
+omega_r=0;
+Kv=400;
+Kw=400;
+% [t,v]=ode45(@(t,v) EOM_with_slip(t,v,R,Meq,mr,K,b,i,Jeq,Tr,Tl,P1,P2,L,Iwy),timespan,[0;0;0;0]);
+% [t,v]=ode45(@(t,v) EOM_without_slip(t,v,R,Meq,mr,b,Jeq,Tr,Tl),timespan,[0;0]);
+% [t,v]=ode45(@(t,v) old_controller(t,v,Vr,omega_r,Kv,Kw,R,mr,b,Meq,Jeq),timespan,[0;0]);
+[t,v]=ode45(@(t,v) old_controller(t,v,Vr,omega_r,Kv,Kw,R,mr,b,Meq,Jeq,mew,P1,P2,Iwy,i,L,N),timespan,[0;0;0;0]);
+%% plots
+V=v(:,1);
+omega=v(:,2);
+t1_dot=v(:,3);
+t2_dot=v(:,4);
+
+[Vdot_states s]=use_old_controller(t,v,Vr,omega_r,Kv,Kw,R,mr,b,Meq,Jeq,mew,P1,P2,Iwy,i,L,N);
+
+vdot=Vdot_states(:,1);
+omega_dot=Vdot_states(:,2);
+t1_ddot=Vdot_states(:,3);
+t2_ddot=Vdot_states(:,4);
+
+addn_term_1=(Iwy/R)*(t1_ddot+t2_ddot);
+addn_term_2=(Iwy/R)*(t1_ddot-t2_ddot);
+%% Vdot plots
+fpath='D:\From open loop\Simulation\Dynamic with slip\Old controller response\Step velocity & omega';
+
+figure;
+subplot(1,2,1)
+plot(t,vdot)
+xlabel("Time",'interpreter','latex');
+ylabel("$\dot{V}$",'interpreter','latex');
+xlim([0 50])
+grid on
+box on
+title("$\dot{V}$ vs Time for Step V $\&$ $\omega$",'interpreter','latex')
+subplot(1,2,2)
+plot(t,omega_dot)
+xlabel("Time",'interpreter','latex');
+ylabel("$\dot{\omega}$",'interpreter','latex');
+grid on
+box on
+xlim([0 50])
+title("$\dot{\omega}$ vs Time for Step V $\&$ $\omega$",'interpreter','latex')
+
+% filename='V_dots';
+% saveas(gca, fullfile(fpath, filename), 'jpg');
+%% Theta_ddot plots
+figure;
+subplot(1,2,1)
+plot(t,t1_ddot)
+xlabel("Time",'interpreter','latex');
+ylabel("$\ddot{\theta_1}$",'interpreter','latex');
+grid on
+box on
+xlim([0 50])
+title("$\ddot{\theta_1}$ vs Time for Step V $\&$ $\omega$",'interpreter','latex')
+subplot(1,2,2)
+plot(t,t2_ddot)
+xlabel("Time",'interpreter','latex');
+ylabel("$\ddot{\theta_2}$",'interpreter','latex');
+grid on
+box on
+xlim([0 50])
+title("$\ddot{\theta_2}$ vs Time for Step V $\&$ $\omega$",'interpreter','latex')
+
+% filename='Theta_ddots';
+% saveas(gca, fullfile(fpath, filename), 'jpg');
+%% Velocity plots
+figure;
+subplot(1,2,1)
+plot(t,V)
+xlabel("Time",'interpreter','latex');
+ylabel("V",'interpreter','latex');
+grid on
+xlim([0 50])
+box on
+title("Velocity vs Time for Step V $\&$ $\omega$",'interpreter','latex')
+subplot(1,2,2)
+plot(t,omega)
+xlabel("Time",'interpreter','latex');
+ylabel("$\omega$",'interpreter','latex');
+grid on
+xlim([0 50])
+box on
+title("$\omega$ vs Time for Step V $\&$ $\omega$",'interpreter','latex')
+
+% filename='Velocities';
+% saveas(gca, fullfile(fpath, filename), 'jpg');
+%% Additional terms plot
+figure;
+subplot(1,2,1)
+plot(t,addn_term_1)
+xlabel("Time",'interpreter','latex')
+ylabel("Additional term in $\dot{V}$",'interpreter','latex')
+grid on
+box on
+xlim([0 50])
+title("Additional term in $\dot{V}$ for Step V $\&$ $\omega$",'interpreter','latex')
+subplot(1,2,2)
+plot(t,addn_term_2)
+xlabel("Time",'interpreter','latex')
+ylabel("Additional term in $\dot{\omega}$",'interpreter','latex')
+grid on 
+xlim([0 50])
+box on
+title("Additional term in $\dot{\omega}$ for Step V $\&$ $\omega$",'interpreter','latex')
+
+% filename='Additional terms in velocities in both';
+% saveas(gca, fullfile(fpath, filename), 'jpg');
+
+%% Slip ratio  plots
+figure;
+plot(t,s)
+xlabel("Time",'interpreter','latex')
+ylabel("s",'interpreter','latex')
+grid on
+xlim([0 50])
+box on
+title("Slip Ratio vs Time for Step V $\&$ $\omega$",'interpreter','latex')
+
+% filename='Slip ratio';
+% saveas(gca, fullfile(fpath, filename), 'jpg');
+****************************************************************************************************************************************************
