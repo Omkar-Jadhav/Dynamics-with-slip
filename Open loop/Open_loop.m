@@ -48,13 +48,23 @@ Kv=2*wn*zeta;   %Proportional gain for linear velocity
 Kw=2*wn*zeta;   %Proportional gain for angular velocity
 
 % Solver
+% Tr=0.2678;    %For costant velocity
+% Tl=0.2678;    % For constant velocity
+
+% Tr=F_roll*R;
+% Tl=F_roll*R;
+
 Tr=0;
 Tl=0;
 %Integrating states [Vdot omega_dot t1_ddot t2_ddot]
-[t,v]=ode23s(@(t,v) EOM_with_slip_s_abs(t,v,R,Meq,mr,mewR,mewL,b,i,Jeq,...
+[t,v]=ode23s(@(t,v) EOM_with_slip(t,v,R,Meq,mr,mewR,mewL,b,i,Jeq,...
                             Tr,Tl,P1,P2,L,Iwy,N,F_roll),timespan,[0;0;0;0]);
+                        
+% [t,v]=ode23s(@(t,v) EOM_with_slip(t,v,R,Meq,mr,mewR,mewL,b,i,Jeq,...
+%     Tr,Tl,P1,P2,L,Iwy,N,F_roll),timespan,[0;0;0;0]);
 %% Retracing the intermediate values for plotting
-[~,Vdot omega_dot t1_ddot t2_ddot sr sl Tr Tl flong_1 flong_2] = cellfun(@(t,v)  EOM_with_slip_s_abs(t,v,R,Meq,mr,mewR,mewL,b,i,Jeq,...
+[~, Vdot, omega_dot t1_ddot t2_ddot sr sl Tr Tl flong_1 flong_2] = cellfun(@(t,v) ...
+                            EOM_with_slip(t,v,R,Meq,mr,mewR,mewL,b,i,Jeq,...
                             Tr,Tl,P1,P2,L,Iwy,N,F_roll), num2cell(t),...
                                         num2cell(v,2),'uni',0);
 Vdot=cell2mat(Vdot);
@@ -98,4 +108,4 @@ if(dist=='Y')
     fpath='D:\From open loop\Simulation\Dynamic with slip\Controller response with slip\With disturbances\Ramp V';
 end
 Save='N';   
-Plots(t,v,Vdot_states,s,T,fpath,Iwy,R,Vr,omega_r,Kv,Kw,mr,b,P1,P2,L,Save,Name,dist);
+Plots(t,v,Vdot_states,s,T,fpath,Iwy,R,Vr,omega_r,Kv,Kw,mr,b,P1,P2,L,Save,Name,dist,flong_1,flong_2);
