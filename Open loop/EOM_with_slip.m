@@ -18,8 +18,8 @@ if(t==0)
 end
 %% Impulse input
 if(t<0.01)
-    Tr=1000;
-    Tl=1000;
+    Tr=-1000;
+    Tl=-1000;
 end
 %% Rolling resistance
 if(V<0)
@@ -82,11 +82,6 @@ else
      flong_2=0;
      sl=0;
 end
-
-% if(dir=='B')
-%     flong_1=flong_1*-1;
-%     flong_2=flong_2*-1;
-% end
 
 s=[sr;sl];
 
