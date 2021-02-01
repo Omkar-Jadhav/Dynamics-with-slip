@@ -10,6 +10,12 @@ t2_dot=v(4);
 rho1_dot=(V+omega*L)/2;
 rho2_dot=(V-omega*L)/2;
 
+
+%%
+if(t>0 && t<0.001)
+    Tr=100000
+    Tl=100000
+end
 %% Longitudnal forces
 %Right wheel
 if(abs(rho1_dot)>abs(R*t1_dot)) %Case of braking
@@ -62,13 +68,17 @@ t1_ddot=(Tr-flong_1*R)/Iwy;
 t2_ddot=(Tl-flong_2*R)/Iwy;
 
 
-t1_ddot=(Tr-flong_1*R-T_roll*R)/Iwy;
-t2_ddot=(Tl-flong_2*R-T_roll*R)/Iwy;
+% t1_ddot=(Tr-flong_1*R-T_roll*R)/Iwy;
+% t2_ddot=(Tl-flong_2*R-T_roll*R)/Iwy;
 %% Body EOM
 % Vdot= [(Tr+Tl)/R+mr*b*omega^2-(Iwy/R)*(t1_ddot+t2_ddot) ]/(2*(P1+P2));
 % omega_dot=[( (Tr-Tl)/R- mr*b/L*V*omega -(Iwy/R)*(t1_ddot-t2_ddot) )]/(2*L*(P1-P2));
 
-Vdot= [mr*b*omega^2+(flong_1+flong_2-2*T_roll)]/(2*(P1+P2));
+% Vdot= [mr*b*omega^2+(flong_1+flong_2-2*T_roll)]/(2*(P1+P2));
+% omega_dot=(- mr*b/L*V*omega+(flong_1-flong_2) )/(2*L*(P1-P2));
+
+
+Vdot= [mr*b*omega^2+(flong_1+flong_2)]/(2*(P1+P2));
 omega_dot=(- mr*b/L*V*omega+(flong_1-flong_2) )/(2*L*(P1-P2));
 %% Output states
 vdot_states=[Vdot;omega_dot;t1_ddot;t2_ddot];

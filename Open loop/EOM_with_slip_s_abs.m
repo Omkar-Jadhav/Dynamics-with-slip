@@ -10,16 +10,23 @@ t2_dot=v(4);
 rho1_dot=(V+omega*L)/2;
 rho2_dot=(V-omega*L)/2;
 
-
+dir='B';
 %% Impulse input
-if( t>0 && t<0.001)
+if(t<0.01)
     Tr=1000;
     Tl=1000;
 end
-
-% if(V<0)
-%     F_roll=-1*F_roll;
-% end
+%% Rolling resistance
+if(V<0)
+    F_roll=-F_roll;
+end
+if(abs(V)<10e-5)
+    F_roll=0;
+end
+%% Surface change
+if(t>40 && t<60)
+    mewR=0.3;
+end    
 
 %% Longitudnal forces
 %Right wheel
@@ -28,7 +35,7 @@ if(abs(rho1_dot)>abs(R*t1_dot)) %Case of braking
 %         sr=0;
 %         flong_1=0;
 %     else
-        sr=((abs(R*t1_dot)-abs(rho1_dot))/(rho1_dot));
+        sr=((abs(R*t1_dot)-abs(rho1_dot))/abs(rho1_dot));
         flong_1=friction(mewR,sr,N);
 %     end
         
@@ -37,7 +44,7 @@ elseif(abs(rho1_dot)<abs((R*t1_dot))) % Case of accelerating
 %         flong_1=0;
 %         sr=0;
 %     else
-        sr=((abs(R*t1_dot)-abs(rho1_dot))/(R*t1_dot));
+        sr=((abs(R*t1_dot)-abs(rho1_dot))/abs(R*t1_dot));
         flong_1=friction(mewR,sr,N);
 %     end
 else
@@ -51,7 +58,7 @@ if(abs(rho2_dot)>abs(R*t2_dot)) %Case of braking
 %         flong_2=0;
 %         sl=0;
 %     else
-        sl=((abs(R*t2_dot)-abs(rho2_dot))/(rho2_dot));
+        sl=((abs(R*t2_dot)-abs(rho2_dot))/abs(rho2_dot));
         flong_2=friction(mewL,sl,N);
 %     end
 elseif(abs(rho2_dot)<abs((R*t2_dot))) % Case of accelerating
@@ -59,12 +66,16 @@ elseif(abs(rho2_dot)<abs((R*t2_dot))) % Case of accelerating
 %         flong_2=0;
 %         sl=0;
 %     else
-        sl=((abs(R*t2_dot)-abs(rho2_dot))/(R*t2_dot));
+        sl=((abs(R*t2_dot)-abs(rho2_dot))/abs(R*t2_dot));
         flong_2=friction(mewL,sl,N);
 %     end
 else
      flong_2=0;
      sl=0;
+end
+if(dir=='B')
+    flong_1=flong_1*-1;
+    flong_2=flong_2*-1;
 end
 
 s=[sr;sl];

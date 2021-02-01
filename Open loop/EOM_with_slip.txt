@@ -7,11 +7,10 @@ omega=v(2);
 t1_dot=v(3);
 t2_dot=v(4);
 
-
 rho1_dot=(V+omega*L)/2;
 rho2_dot=(V-omega*L)/2;
 
-dir='B';
+dir='F';
 global t1_ddot t2_ddot 
 if(t==0)
     t1_ddot=0;
@@ -19,12 +18,12 @@ if(t==0)
 end
 %% Impulse input
 if(t<0.01)
-    Tr=-1000;
-    Tl=-1000;
+    Tr=1000;
+    Tl=1000;
 end
 
 %% Rolling resistance
-if(V<-10e-7)
+if(V<-10e-5)
     F_roll=-F_roll;
 end
 if(abs(V)<10e-5)
@@ -36,7 +35,7 @@ end
 % end
 %% Longitudnal forces
 %Right wheel
-t
+t;
 % t1_ddot
 % t1_dot
 % rho1_dot

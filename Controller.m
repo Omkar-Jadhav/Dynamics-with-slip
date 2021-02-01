@@ -39,7 +39,6 @@ end
 
 [vdot_states Vdot omega_dot t1_ddot t2_ddot sr sl Tr Tl flong_1 flong_2]=...
     EOM_with_slip_s_abs(t,v,R,Meq,mr,mewR,mewL,b,i,Jeq,Tr,Tl,P1,P2,L,Iwy,N,T_roll);
-% vdot_states=EOM_without_slip(t,v,R,Meq,mr,b,Jeq,Tr,Tl,T_roll,L);
 tg=t;           %updating global time variable
 end
 

@@ -1,4 +1,4 @@
-function Plots(t,v,Vdot_states,s,T,fpath,Iwy,R,Vr,omega_r,Kv,Kw,mr,b,P1,P2,L,Save,Name,dist)
+function Plots(t,v,Vdot_states,s,T,fpath,Iwy,R,Vr,omega_r,Kv,Kw,mr,b,P1,P2,L,Save,Name,dist,flong_1,flong_2)
 %PLOTS Summary of this function goes here
 %   Detailed explanation goes here
 vdot=Vdot_states(:,1);
@@ -225,6 +225,42 @@ if(Save=='Y')
     filename='Control torques.tiff';
     exportgraphics(f6, fullfile(fpath, filename), 'Resolution',600);
 end
+
+%% LOngitudinal forces
+f7=figure;
+subplot(1,2,1)
+plot(t,flong_1,'Linewidth',2)
+xlabel({"Time"},'interpreter','latex','FontSize',14)
+ylabel({"$f_{long_{R}}$"},'interpreter','latex','FontSize',14)
+grid on
+box on
+title([{"$f_{long_{R}}$ vs Time",Name}],'interpreter','latex','FontSize',14)
+subplot(1,2,2)
+plot(t,flong_2,'Linewidth',2)
+xlabel({"Time"},'interpreter','latex','FontSize',14)
+ylabel({"$f_{long_{L}}$"},'interpreter','latex','FontSize',14)
+grid on
+box on
+title([{"$f_{long_{L}}$ vs Time",Name}],'interpreter','latex','FontSize',14)
+set(gcf, 'Units', 'centimeters', 'OuterPosition', [05, 5, 30, 15]);
+%% Wheel angular velocities
+f8=figure;
+subplot(1,2,1)
+plot(t,t1_dot,'Linewidth',2)
+xlabel({"Time"},'interpreter','latex','FontSize',14)
+ylabel({"$\dot{\theta}_R$"},'interpreter','latex','FontSize',14)
+grid on
+box on
+title([{"$\dot{\theta}_R$ vs Time",Name}],'interpreter','latex','FontSize',14)
+subplot(1,2,2)
+plot(t,t2_dot,'Linewidth',2)
+xlabel({"Time"},'interpreter','latex','FontSize',14)
+ylabel({"$\dot{\theta}_L$"},'interpreter','latex','FontSize',14)
+grid on
+box on
+title([{"$\dot{\theta}_L$ vs Time",Name}],'interpreter','latex','FontSize',14)
+set(gcf, 'Units', 'centimeters', 'OuterPosition', [05, 5, 30, 15]);
+
 end
 
 
