@@ -1,19 +1,26 @@
 function Plots(t,v,Vdot_states,s,T,fpath,Iwy,R,Vr,omega_r,Kv,Kw,mr,b,P1,P2,L,Save,Name,dist,flong_1,flong_2)
 %PLOTS Summary of this function goes here
 %   Detailed explanation goes here
-vdot=Vdot_states(:,1);
-omega_dot=Vdot_states(:,2);
-t1_ddot=Vdot_states(:,3);
-t2_ddot=Vdot_states(:,4);
+Xdot=Vdot_states(:,1);
+Ydot=Vdot_states(:,2);
+psi_dot=Vdot_states(:,3);
+vdot=Vdot_states(:,4);
+omega_dot=Vdot_states(:,5);
+t1_ddot=Vdot_states(:,6);
+t2_ddot=Vdot_states(:,7);
+
 sr=s(:,1);
 sl=s(:,2);
 Tr=T(:,1);
 Tl=T(:,2);
 
-V=v(:,1);
-omega=v(:,2);
-t1_dot=v(:,3);
-t2_dot=v(:,4);
+X=v(:,1);
+Y=v(:,2);
+psi=v(:,3);
+V=v(:,4);
+omega=v(:,5);
+t1_dot=v(:,6);
+t2_dot=v(:,7);
 
 addn_term_1=(Iwy/(2*R*(P1+P2)))*(t1_ddot+t2_ddot);
 addn_term_2=(Iwy/(2*L*R*(P1-P2)))*(t1_ddot-t2_ddot);
@@ -260,6 +267,17 @@ grid on
 box on
 title([{"$\dot{\theta}_L$ vs Time",Name}],'interpreter','latex','FontSize',14)
 set(gcf, 'Units', 'centimeters', 'OuterPosition', [05, 5, 30, 15]);
+
+%% X-Y position
+f9=figure;  
+quiver(X,Y,100*Xdot,100*Ydot)
+% plot(X,Y,'Linewidth',2)
+xlabel({"X"},'interpreter','latex','FontSize',14)
+ylabel({"Y"},'interpreter','latex','FontSize',14)
+grid on
+box on
+title([{"X-Y",Name}],'interpreter','latex','FontSize',14)
+set(gcf, 'Units', 'centimeters', 'OuterPosition', [03, 3, 20, 20]);
 
 end
 
